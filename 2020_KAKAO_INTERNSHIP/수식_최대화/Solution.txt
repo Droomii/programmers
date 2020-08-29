@@ -1,0 +1,76 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+class Solution {
+
+	public static long maxReward = 0;
+	public static List<String> orders = new ArrayList<>();
+	public static char[] ops = { '+', '-', '*' };
+
+	public long solution(String expression) {
+		StringBuilder sb = new StringBuilder();
+		for (char op : ops) {
+			if (expression.indexOf(op) != -1) {
+				sb.append(op);
+			}
+		}
+		permute(sb.toString());
+		
+		// split into operators and operands
+		String[] split = expression.split("(?<=[-+*])|(?=[-+*])");
+		
+		// try all permutations
+		for (String order : orders) {
+			List<String> elements = Arrays.stream(split).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+			for(char c : order.toCharArray()) {
+				int operatorIdx = elements.indexOf(String.valueOf(c));
+				while(operatorIdx!=-1) {
+					long left = Long.parseLong(elements.get(operatorIdx-1));
+					long right = Long.parseLong(elements.get(operatorIdx+1));
+					long res = 0;
+					switch(c) {
+					case '+':
+						res = left + right;
+						break;
+					case '-':
+						res = left - right;
+						break;
+					case '*':
+						res = left * right;
+						break;
+					}
+					elements.set(operatorIdx, Long.toString(res));
+					elements.remove(operatorIdx+1);
+					elements.remove(operatorIdx-1);
+					operatorIdx = elements.indexOf(String.valueOf(c));
+				}
+			}
+			maxReward = Long.max(maxReward, Math.abs(Long.parseLong(elements.get(0))));
+		}
+		return maxReward;
+	}
+
+	public static int priority(String order, String c) {
+		return order.indexOf(c);
+	}
+
+	public static void permute(String remain) {
+		permute("", remain);
+	}
+
+	public static void permute(String pre, String remain) {
+		if (remain.isEmpty()) {
+			orders.add(pre);
+			return;
+		}
+		for (int i = 0; i < remain.length(); i++) {
+			permute(pre + remain.charAt(i), remain.substring(0, i) + remain.substring(i + 1));
+		}
+	}
+	
+	public static void main(String[] args) {
+		String expression = "100-200*300-500+20";
+		System.out.println(new Solution().solution(expression));
+	}
+}
