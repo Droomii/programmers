@@ -1,63 +1,48 @@
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
-public class Solution {
-	public int[] solution(String[] words, String[] queries) {
-		int[] answer = new int[queries.length];
-		Map<Integer, NavigableSet<String>> wordByLen = new HashMap<Integer, NavigableSet<String>>();
-		Map<Integer, NavigableSet<String>> wordByLenReverse = new HashMap<Integer, NavigableSet<String>>();
-		
-		for(String word : words) {
-			NavigableSet<String> wordSet = wordByLen.getOrDefault(word.length(),new TreeSet<String>());
-			NavigableSet<String> wordSetReverse = wordByLenReverse.getOrDefault(word.length(),new TreeSet<String>());
-			wordSet.add(word);
-			StringBuilder sb = new StringBuilder(word);
-			wordSetReverse.add(sb.reverse().toString());
-			wordByLen.putIfAbsent(word.length(), wordSet);
-			wordByLenReverse.putIfAbsent(word.length(), wordSetReverse);
-		}
-		Map<String, Integer> doneQuery = new HashMap<>();
-		for(int i = 0; i < queries.length; i++) {
-			String originalQuery = queries[i];
-			String query = originalQuery;
-			int matches = 0;
-			if(doneQuery.containsKey(query)) {
-				answer[i] = doneQuery.get(query);
-				continue;
+class Solution {
+    public int[] solution(String[] words, String[] queries) {
+    	Map<Integer, NavigableSet<String>> wordMap = new HashMap<>();
+    	Map<Integer, NavigableSet<String>> wordRevMap = new HashMap<>();
+    	Arrays.stream(words).forEach(a -> {
+    		int len = a.length();
+    		NavigableSet<String> wordByLen = wordMap.getOrDefault(len, new TreeSet<String>());
+    		wordByLen.add(a);
+    		wordMap.put(len, wordByLen);
+    		wordByLen = wordRevMap.getOrDefault(len, new TreeSet<String>());
+    		wordByLen.add(new StringBuilder(a).reverse().toString());
+    		wordRevMap.put(len, wordByLen);
+    	});
+    	int[] answer = new int[queries.length];
+    	Map<String, Integer> duplicateQuery = new HashMap<>();
+    	for(int i = 0 ; i < queries.length; i++) {
+    		String word = queries[i];
+    		try {
+    			answer[i] = duplicateQuery.get(queries[i]);
+    			continue;
+    		}catch(Exception e) {}
+    		try{
+    			int wordLen = word.length();
+        		NavigableSet<String> wordPool = wordMap.get(wordLen);
+        		StringBuilder sb = new StringBuilder(word.replaceAll("\\?", ""));
+        		if(word.startsWith("?")) {
+        			 wordPool = wordRevMap.get(wordLen);
+        			 sb.reverse();
+        		}
+        		String q = sb.toString();
+        		
+    			wordPool = wordPool.tailSet(q, true).headSet(q + '{', true);
+    			answer[i] = wordPool.size();
+    			duplicateQuery.put(word, wordPool.size());
+    		}catch (Exception e) {
+    			duplicateQuery.put(word, 0);
+    			answer[i] = 0;
 			}
-			NavigableSet<String> wordSet;
-			if(query.endsWith("?")) {
-				wordSet = wordByLen.get(query.length());
-				query = query.substring(0, query.indexOf('?'));
-			}else {
-				wordSet = wordByLenReverse.get(query.length());
-				query = query.substring(query.lastIndexOf('?')+1);
-				query = new StringBuilder(query).reverse().toString();
-			}
-			
-			if(wordSet==null) {
-				answer[i] = 0;
-				doneQuery.put(originalQuery, 0);
-				continue;
-			}
-			if(query.length()==0) {
-				matches = wordSet.size();
-				answer[i] = matches;
-				doneQuery.put(originalQuery, matches);
-				continue;
-			}
-            try{
-                wordSet = wordSet.tailSet(query, true).headSet(query + "{", false);
-                matches = wordSet.size();
-			    answer[i] = matches;
-			    doneQuery.put(originalQuery, matches);
-            }catch(Exception e){
-                answer[i] = 0;
-				doneQuery.put(originalQuery, 0);
-            }
-		}
-		return answer;
+    	}
+        return answer;
     }
 }
