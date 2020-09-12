@@ -1,87 +1,50 @@
-import java.util.Arrays;
+// https://programmers.co.kr/learn/courses/30/lessons/67260
+
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 class Solution {
-	
-	public static Map<Integer, Node> nodes = new HashMap<>();
-	public static Set<Node> visited = new HashSet<>();
+	static Set<Node> visited = new HashSet<>();
+	static Map<Integer, Node> nodes = new HashMap<>();
+	static Map<Node, Node> startMap = new HashMap<>();
+	static Set<Node> endSet = new HashSet<>();
 	
     public boolean solution(int n, int[][] path, int[][] order) {
-    	
+    	for(int i = 0; i < n; i++) {
+    		nodes.put(i, new Node());
+    	}
     	for(int[] p : path) {
-    		nodes.putIfAbsent(p[0], new Node(p[0]));
-    		nodes.putIfAbsent(p[1], new Node(p[1]));
-    		nodes.get(p[0]).addChild(nodes.get(p[1]));
-    		nodes.get(p[1]).addChild(nodes.get(p[0]));
+    		Node node1 = nodes.get(p[0]);
+    		Node node2 = nodes.get(p[1]);
+    		node1.connected.add(node2);
+    		node2.connected.add(node1);
     	}
-    	Arrays.stream(order).forEach(o -> Node.addCondition(nodes.get(o[0]), nodes.get(o[1])));
-    	
-    	visit(nodes.get(0), null);
-    	return n==visited.size();
+    	for(int[] ord : order) {
+    		startMap.put(nodes.get(ord[0]), nodes.get(ord[1]));
+    		endSet.add(nodes.get(ord[1]));
+    	}
+    	dfs(nodes.get(0));
+        return visited.size()==n;
     }
-    
-    public static void visit(Node node, Node parent) {
+    static void dfs(Node node) {
     	visited.add(node);
-    	node.removeChild(parent);
-    	if(node.keyNode!=null) {
-    		if(!visited.contains(node.keyNode)) {
-    			return;
-    		}
-    	}else if(node.openNode!=null) {
-    		if(visited.contains(node.openNode)) {
-    			visit(node.openNode, null);
-    		}
-    	}
-    	for(Node grandChild : node) {
-    		visit(grandChild, node);
-    	}
+    	if(startMap.containsKey(node)) {
+    		Node openedNode = startMap.get(node);
+    		endSet.remove(openedNode);
+			if(visited.contains(openedNode)) {
+				dfs(openedNode);
+			}
+		}
+		if(endSet.contains(node)) return;
+		
+		for(Node nextNode : node.connected) {
+			if(!visited.contains(nextNode))
+				dfs(nextNode);
+		}
     }
-    
-    public static void main(String[] args) {
-		int[][] path = {{0,1},{0,3},{0,7},{8,1},{3,6},{1,2},{4,7},{7,5}};
-		int[][] order = {{8,5},{6,7},{4,1}};
-		int n = 9;
-		System.out.println(new Solution().solution(n, path, order));
-	}
 }
-
-class Node implements Iterable<Node>{
-	public Set<Node> children;
-	public int idx;
-	public Node keyNode;
-	public Node openNode;
-	public Node(int idx) {
-		this.children = new HashSet<>();
-		this.idx = idx;
-	}
-	@Override
-	public String toString() {
-		return "Node "+this.idx+" [children=" + Arrays.toString(children.stream().mapToInt(a -> a.idx).toArray()) + 
-				(keyNode==null ? "" : (", keyNode=" + keyNode.idx)) +
-				(openNode==null ? "" : (", openNode=" + openNode.idx)) +
-				"]";
-	}
-	
-	public void addChild(Node child) {
-		this.children.add(child);
-	}
-	public void removeChild(Node child) {
-		this.children.remove(child);
-	}
-
-	@Override
-	public Iterator<Node> iterator() {
-		return this.children.iterator();
-	}
-	
-	public static void addCondition(Node startNode, Node endNode) {
-		endNode.keyNode = startNode;
-		startNode.openNode = endNode; 
-	}
-	
-	
+class Node{
+	Set<Node> connected = new HashSet<>();
 }
