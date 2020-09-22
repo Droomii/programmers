@@ -4,30 +4,26 @@ class Solution {
     public int solution(int[] a) {
     	if(a.length==1) return 1;
     	if(a.length==2) return 2;
-    	
-    	int answer = 1;
-    	int smallestIdx = 0;
-    	int smallest = 1000000001;
-    	for(int i = 0; i < a.length; i++) {
-    		smallest = Integer.min(smallest, a[i]);
-    		if(smallest==a[i]) {
-    			smallestIdx = i;
-    		}
-    		if(smallest==-1000000000) break;
-    	}
-    	
-    	int min = 1000000001;
-    	for(int i = 0; i < smallestIdx; i++) {
-    		if(a[i] < min) {
-    			answer++;
-    			min = a[i]; 
-    		}
-    	}
-    	min = 1000000001;
-    	for(int i = a.length-1; i > smallestIdx; i--) {
-    		if(a[i] < min) {
-    			answer++;
-    			min = a[i]; 
+    	int answer = 2;
+    	int leftMin = a[0];
+    	int rightMin = a[a.length-1];
+    	int leftIdx = 0;
+    	int rightIdx = a.length-1;
+    	while(rightIdx-leftIdx > 1) {
+    		if(leftMin > rightMin) {
+    			if(a[++leftIdx] < leftMin) {
+    				answer++;
+    				leftMin = a[leftIdx];
+    			}else if(a[leftIdx] < rightMin) {
+    				answer++;
+    			}
+    		}else {
+    			if(a[--rightIdx] < rightMin) {
+    				answer++;
+    				rightMin = a[rightIdx];
+    			}else if(a[rightIdx] < leftMin) {
+    				answer++;
+    			}
     		}
     	}
     	return answer;
