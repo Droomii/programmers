@@ -1,8 +1,9 @@
 // https://programmers.co.kr/learn/courses/30/lessons/49189
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.SortedMap;
@@ -10,30 +11,46 @@ import java.util.TreeMap;
 
 class Solution {
     public int solution(int n, int[][] edge) {
-    	boolean[][] matrix = new boolean[n][n];
-    	Arrays.stream(edge).forEach(e ->{
-    		matrix[e[0]-1][e[1]-1] = true;
-    		matrix[e[1]-1][e[0]-1] = true;
-    	});
+    	Map<Integer, Node> nodeMap = new HashMap<>();
+    	
+    	for(int i = 1; i < n+1; i++) {
+    		nodeMap.put(i, new Node(i));
+    	}
+    	for(int[] e : edge) {
+    		nodeMap.get(e[0]).connect(nodeMap.get(e[1]));
+    	}
+    	
+    	SortedMap<Integer, Integer> distances = new TreeMap<>();
+    	
     	Set<Integer> visited = new HashSet<>();
-    	Queue<Integer> nodeQ = new ArrayDeque<Integer>();
-    	Queue<Integer> distQ = new ArrayDeque<Integer>();
-    	SortedMap<Integer, Integer> distCnt = new TreeMap<>();
-    	nodeQ.add(0);
-    	distQ.add(0);
-    	visited.add(0);
+    	
+    	Queue<int[]> nodeQ = new PriorityQueue<>((a, b)->a[1] - b[1]);
+    	nodeQ.add(new int[] {1, 0});
+    	
     	while(!nodeQ.isEmpty()) {
-    		int from = nodeQ.poll();
-    		int dist = distQ.poll();
-    		distCnt.compute(dist, (k,v) -> (v==null) ? 1 : v+1);
-    		for(int to = 0; to < n; to++) {
-    			if(matrix[from][to] && !visited.contains(to)) {
-    				visited.add(to);
-    				nodeQ.add(to);
-    				distQ.add(dist+1);
+    		int[] currNode = nodeQ.poll();
+    		if(visited.add(currNode[0])) {
+    			distances.compute(currNode[1], (k, v)->(v==null) ? 1 : v+1);
+    			Node node = nodeMap.get(currNode[0]);
+    			for(Node con : node.connected) {
+    				nodeQ.add(new int[] {con.idx, currNode[1]+1});
     			}
     		}
     	}
-        return distCnt.get(distCnt.lastKey());
+        return distances.get(distances.lastKey());
     }
+}
+
+class Node{
+	Set<Node> connected;
+	int idx;
+	
+	public Node(int idx) {
+		this.connected = new HashSet<>();
+		this.idx = idx;
+	}
+	public void connect(Node o) {
+		connected.add(o);
+		o.connected.add(this);
+	}
 }
