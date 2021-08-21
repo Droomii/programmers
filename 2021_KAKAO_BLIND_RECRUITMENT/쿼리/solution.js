@@ -1,56 +1,51 @@
-const lang = ['java', 'python', 'cpp'];
-const type = ['backend', 'frontend'];
-const career = ['junior', 'senior'];
-const food = ['pizza', 'chicken'];
-
-const columns = [lang, type, career, food];
-
-function reduceFunc(acc, v, i, arr) {
-    if (!arr[i+1]) {
-        return {...acc, [v]: []};
-    }
-    return {...acc, [v]: arr[i]}
-}
-
-columns.reduce((acc, v, i) => {
-    if ()
-    
-}, {})
-
-function solution(info, query) {
-    const db = lang.reduce((acc, v) => (
-        {...acc, [v]: type.reduce((acc, v) => (
-            {...acc, [v]: career.reduce((acc, v) => (
-                {...acc, [v]: food.reduce((acc, v) => (
-                    {...acc, [v]: []}), {})}), {})}), {})}), {})
-    
-    info.forEach(v => {
-        const split = v.split(' ');
-        const arr = db[split[0]][split[1]][split[2]][split[3]];
-        arr.push(parseInt(split[4]));
-        arr.sort((a, b) => a - b);
-    });
-    
+function solution(info, queries) {
     const answer = [];
+
+    const db = info.reduce((acc, v) => {
+        const split = v.split(' ');
+        const score = parseInt(split.splice(-1)[0]);
+        
+        let obj = acc;
+        split.forEach((v2, i) => {
+            if (!obj[v2]) {
+                if (i === 3)
+                    obj[v2] = [];
+                else
+                    obj[v2] = {};
+            }
+            obj = obj[v2];
+        })
+        obj.push(score);
+        obj.sort((a, b) => a - b);
+        return acc;
+    }, [])
+
+    return queries.map(query => {
+        let sum = 0;
+
+        const queryValues = query.split(' ').reduce((acc, v) => {
+            if (v === 'and') return acc;
+            acc.push(v);
+            return acc;
+        }, [])
+        const queryScore = parseInt(queryValues.splice(-1)[0]);
     
-    query.forEach(v => {
-        const split = v.split(' ').filter(v => v !== 'and').map(v => {
+        let nodes = [db];
+        queryValues.forEach((v, i) => {
             if (v === '-') {
-                return []
+                nodes = nodes.reduce((acc, v) => {
+                    acc.push(...Object.values(v));
+                    return acc;
+                }, [])
+            } else {
+                nodes = nodes.map(node => node[v]).filter(node => node);
             }
-        });
-        split[4] = parseInt(split[4]);
-        
-        const count = split.reduce((acc, v, i) => {
-            let next = tree[v];
-            if (!next){
-                
-            }
-            
-            return acc + next
-        }, 0)
-        
-    });
-    
-    return answer;
+        })
+        nodes.forEach(node => {
+            const idx = node.findIndex(v => v >= queryScore);
+            if (idx < 0) return;
+            sum += node.length - idx;
+        })
+        return sum;
+    })
 }
