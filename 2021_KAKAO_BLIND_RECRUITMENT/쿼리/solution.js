@@ -29,7 +29,7 @@ function solution(info, queries) {
             return acc;
         }, [])
         const queryScore = parseInt(queryValues.splice(-1)[0]);
-    
+
         let nodes = [db];
         queryValues.forEach((v, i) => {
             if (v === '-') {
