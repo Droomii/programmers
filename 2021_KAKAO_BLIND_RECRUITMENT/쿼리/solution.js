@@ -8,7 +8,7 @@ function solution(info, queries) {
         let obj = acc;
         split.forEach((v2, i) => {
             if (!obj[v2]) {
-                if (i === 3)
+                if (i === split.length-1)
                     obj[v2] = [];
                 else
                     obj[v2] = {};
@@ -18,7 +18,7 @@ function solution(info, queries) {
         obj.push(score);
         obj.sort((a, b) => a - b);
         return acc;
-    }, [])
+    }, {})
 
     return queries.map(query => {
         let sum = 0;
@@ -29,7 +29,7 @@ function solution(info, queries) {
             return acc;
         }, [])
         const queryScore = parseInt(queryValues.splice(-1)[0]);
-
+    
         let nodes = [db];
         queryValues.forEach((v, i) => {
             if (v === '-') {
@@ -42,10 +42,26 @@ function solution(info, queries) {
             }
         })
         nodes.forEach(node => {
-            const idx = node.findIndex(v => v >= queryScore);
-            if (idx < 0) return;
-            sum += node.length - idx;
+            sum += countGreaterOrEqual(node, node.length, queryScore);
         })
         return sum;
     })
+}
+
+function countGreaterOrEqual(arr, n, k) {
+    var l = 0;
+    var r = n - 1;
+ 
+    var leftGreater = n;
+ 
+    while (l <= r) {
+        var m = l + parseInt((r - l) / 2);
+        if (arr[m] >= k) {
+            leftGreater = m;
+            r = m - 1;
+        }
+        else
+            l = m + 1;
+    }
+    return (n - leftGreater);
 }
